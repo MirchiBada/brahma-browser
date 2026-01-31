@@ -180,7 +180,7 @@
         <p class="subtitle">Bhagavad Gita Wisdom — Browser Version (ONNX Runtime Web)</p>
 
         <div id="status" class="status loading">
-            Loading Brahma model... (2.5 MB)
+            Loading Brahma model... (2.6 MB single-file)
         </div>
 
         <div class="input-group">
@@ -201,7 +201,7 @@
             <div id="embedding" class="embedding-info"></div>
             <div class="tech-info">
                 <strong>Model Info:</strong><br>
-                • Format: ONNX (205 KB + 2.3 MB data)<br>
+                • Format: ONNX Single-File (2.6 MB, all weights embedded)<br>
                 • Runtime: ONNX Runtime Web<br>
                 • Acceleration: WebGPU / WebAssembly<br>
                 • Privacy: 100% local processing<br>
@@ -342,8 +342,7 @@
                     '• Make sure all files are in the same directory<br>' +
                     '• Check browser console (F12) for details<br>' +
                     '• Files needed:<br>' +
-                    '&nbsp;&nbsp;- brahma_model.onnx (205 KB)<br>' +
-                    '&nbsp;&nbsp;- brahma_model.onnx.data (2.3 MB)<br>' +
+                    '&nbsp;&nbsp;- brahma_model.onnx (2.6 MB single-file)<br>' +
                     '&nbsp;&nbsp;- tokenizer_vocab.json (107 KB)<br><br>' +
                     '<button onclick="debugInfo.classList.add(\'show\')">Show Debug Info</button>';
 
