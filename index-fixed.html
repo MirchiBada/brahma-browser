@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ब्रह्म भगवान — Bhagavad Gita Wisdom (Browser)</title>
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.0/dist/ort.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 700px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.ready {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .embedding-info {
+            font-family: monospace;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            word-break: break-all;
+        }
+
+        .tech-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e7f3ff;
+            border-radius: 10px;
+            font-size: 12px;
+            color: #0066cc;
+        }
+
+        .om-symbol {
+            text-align: center;
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .debug-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            font-size: 11px;
+            font-family: monospace;
+            display: none;
+        }
+
+        .debug-info.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="om-symbol">॥ ॐ ॥</div>
+        <h1>ब्रह्म भगवान</h1>
+        <p class="subtitle">Bhagavad Gita Wisdom — Browser Version (ONNX Runtime Web)</p>
+
+        <div id="status" class="status loading">
+            Loading Brahma model... (2.5 MB)
+        </div>
+
+        <div class="input-group">
+            <input
+                type="text"
+                id="query"
+                placeholder="Ask a question... (e.g., What is karma?)"
+                disabled
+            >
+        </div>
+
+        <button id="askBtn" onclick="askBrahma()" disabled>
+            Ask Brahma
+        </button>
+
+        <div id="result" class="result">
+            <h3>Embedding Result:</h3>
+            <div id="embedding" class="embedding-info"></div>
+            <div class="tech-info">
+                <strong>Model Info:</strong><br>
+                • Format: ONNX (205 KB + 2.3 MB data)<br>
+                • Runtime: ONNX Runtime Web<br>
+                • Acceleration: WebGPU / WebAssembly<br>
+                • Privacy: 100% local processing<br>
+                • Cost: $0/month (static hosting)
+            </div>
+        </div>
+
+        <div id="debug" class="debug-info"></div>
+    </div>
+
+    <script>
+        let session;
+        let tokenizer;
+        let debugInfo = document.getElementById('debug');
+
+        function log(message) {
+            console.log(message);
+            debugInfo.textContent += message + '\n';
+        }
+
+        async function loadTokenizer() {
+            try {
+                log('Fetching tokenizer_vocab.json...');
+                const response = await fetch('tokenizer_vocab.json');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                tokenizer = {
+                    wordToId: data.word_to_id,
+                    vocabSize: data.vocab_size
+                };
+
+                log('✅ Tokenizer loaded: ' + tokenizer.vocabSize + ' words');
+                return true;
+            } catch (e) {
+                log('⚠️ Tokenizer load failed: ' + e.message);
+                log('Using fallback tokenizer');
+
+                tokenizer = {
+                    wordToId: null,
+                    vocabSize: 4000
+                };
+                return true;
+            }
+        }
+
+        function tokenizeQuery(text, maxLen = 48) {
+            const tokens = [];
+
+            // Simple tokenization
+            const words = text.toLowerCase().split(/[\s,\.!?;:()]+/);
+
+            for (const word of words) {
+                let tokenId = 1; // <UNK> token
+                if (tokenizer.wordToId && word in tokenizer.wordToId) {
+                    tokenId = tokenizer.wordToId[word];
+                } else {
+                    // Character-based fallback
+                    tokenId = word.charCodeAt(0) % tokenizer.vocabSize;
+                }
+                tokens.push(BigInt(tokenId));
+            }
+
+            // Pad to maxLen
+            while (tokens.length < maxLen) {
+                tokens.push(BigInt(0)); // <PAD> token
+            }
+
+            // Truncate if too long
+            return tokens.slice(0, maxLen);
+        }
+
+        async function init() {
+            try {
+                log('Starting initialization...');
+                log('User Agent: ' + navigator.userAgent);
+                log('Platform: ' + navigator.platform);
+
+                // Check if ONNX Runtime Web loaded
+                if (typeof ort === 'undefined') {
+                    throw new Error('ONNX Runtime Web not loaded');
+                }
+                log('✅ ONNX Runtime Web loaded');
+
+                // Check WebGPU support
+                if ('gpu' in navigator) {
+                    log('✅ WebGPU supported');
+                } else {
+                    log('⚠️ WebGPU not supported, will use WebAssembly');
+                }
+
+                // Load tokenizer
+                await loadTokenizer();
+
+                // Load ONNX model with detailed options
+                log('Loading ONNX model...');
+
+                const sessionOptions = {
+                    executionProviders: ['webgl', 'wasm'],
+                    enableProfiling: false,
+                    enableCaching: true
+                };
+
+                // Try to create inference session
+                log('Creating inference session...');
+                session = await ort.InferenceSession.create(
+                    'brahma_model.onnx',
+                    sessionOptions
+                );
+
+                log('✅ Brahma model loaded!');
+                log('Input names: ' + session.inputNames);
+                log('Output names: ' + session.outputNames);
+                log('Output shape: ' + JSON.stringify(session.outputNames));
+
+                // Update UI
+                document.getElementById('status').className = 'status ready';
+                document.getElementById('status').textContent = '✅ Brahma Ready! (ब्रह्म भगवान)';
+                document.getElementById('query').disabled = false;
+                document.getElementById('askBtn').disabled = false;
+
+                // Show debug info
+                debugInfo.classList.add('show');
+
+            } catch (e) {
+                console.error('Error loading model:', e);
+                log('❌ Error: ' + e.message);
+                log('Error stack: ' + (e.stack || 'no stack trace'));
+
+                document.getElementById('status').className = 'status error';
+                document.getElementById('status').innerHTML =
+                    '❌ Error: ' + e.message +
+                    '<br><br><strong>Troubleshooting:</strong><br>' +
+                    '• Make sure all files are in the same directory<br>' +
+                    '• Check browser console (F12) for details<br>' +
+                    '• Files needed:<br>' +
+                    '&nbsp;&nbsp;- brahma_model.onnx (205 KB)<br>' +
+                    '&nbsp;&nbsp;- brahma_model.onnx.data (2.3 MB)<br>' +
+                    '&nbsp;&nbsp;- tokenizer_vocab.json (107 KB)<br><br>' +
+                    '<button onclick="debugInfo.classList.add(\'show\')">Show Debug Info</button>';
+
+                debugInfo.classList.add('show');
+            }
+        }
+
+        async function askBrahma() {
+            const query = document.getElementById('query').value;
+            const resultDiv = document.getElementById('result');
+            const embeddingDiv = document.getElementById('embedding');
+            const statusDiv = document.getElementById('status');
+
+            if (!query) {
+                alert('Please enter a question');
+                return;
+            }
+
+            try {
+                statusDiv.className = 'status loading';
+                statusDiv.textContent = 'Processing...';
+                log('Processing query: ' + query);
+
+                // Tokenize
+                const tokens = tokenizeQuery(query);
+                log('Tokens (first 10): ' + tokens.slice(0, 10).join(', '));
+
+                // Create tensor
+                const input = new ort.Tensor('int64', new BigInt64Array(tokens), [1, 48]);
+
+                const startTime = performance.now();
+
+                // Run inference
+                log('Running inference...');
+                const outputs = await session.run({input_ids: input});
+
+                const endTime = performance.now();
+                const latency = (endTime - startTime).toFixed(2);
+
+                // Get embedding
+                const embedding = outputs.embedding;
+                const data = Array.from(embedding.data);
+
+                // Calculate L2 norm
+                let sumSquares = 0;
+                for (let i = 0; i < data.length; i++) {
+                    sumSquares += data[i] * data[i];
+                }
+                const l2Norm = Math.sqrt(sumSquares).toFixed(4);
+
+                // Display result
+                embeddingDiv.innerHTML =
+                    '<strong>Query:</strong> ' + query + '<br><br>' +
+                    '<strong>Latency:</strong> ' + latency + 'ms<br><br>' +
+                    '<strong>Output Shape:</strong> [' + embedding.dims.join(', ') + ']<br><br>' +
+                    '<strong>L2 Norm:</strong> ' + l2Norm + '<br><br>' +
+                    '<strong>First 10 values:</strong><br>' +
+                    data.slice(0, 10).map(v => v.toFixed(4)).join(', ');
+
+                resultDiv.classList.add('show');
+                statusDiv.className = 'status ready';
+                statusDiv.textContent = '✅ Complete!';
+
+                log('✅ Inference complete: ' + latency + 'ms');
+
+            } catch (e) {
+                console.error('Error:', e);
+                log('❌ Inference error: ' + e.message);
+                log('Error stack: ' + (e.stack || 'no stack trace'));
+
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Error: ' + e.message;
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
