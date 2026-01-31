@@ -51,6 +51,9 @@
             border-radius: 10px;
             margin-bottom: 20px;
             font-weight: bold;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
         }
 
         .status.loading {
@@ -66,6 +69,11 @@
         .status.error {
             background: #f8d7da;
             color: #721c24;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
         }
 
         .input-group {
@@ -149,6 +157,20 @@
             margin-bottom: 20px;
             color: #667eea;
         }
+
+        .debug-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            font-size: 11px;
+            font-family: monospace;
+            display: none;
+        }
+
+        .debug-info.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -186,27 +208,47 @@
                 • Cost: $0/month (static hosting)
             </div>
         </div>
+
+        <div id="debug" class="debug-info"></div>
     </div>
 
     <script>
         let session;
         let tokenizer;
+        let debugInfo = document.getElementById('debug');
+
+        function log(message) {
+            console.log(message);
+            debugInfo.textContent += message + '\n';
+        }
 
         async function loadTokenizer() {
             try {
+                log('Fetching tokenizer_vocab.json...');
                 const response = await fetch('tokenizer_vocab.json');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const data = await response.json();
+
                 tokenizer = {
                     wordToId: data.word_to_id,
                     vocabSize: data.vocab_size
                 };
-                console.log('✅ Tokenizer loaded:', tokenizer.vocabSize, 'words');
+
+                log('✅ Tokenizer loaded: ' + tokenizer.vocabSize + ' words');
+                return true;
             } catch (e) {
-                console.warn('⚠️ Could not load tokenizer, using fallback');
+                log('⚠️ Tokenizer load failed: ' + e.message);
+                log('Using fallback tokenizer');
+
                 tokenizer = {
                     wordToId: null,
                     vocabSize: 4000
                 };
+                return true;
             }
         }
 
@@ -238,17 +280,46 @@
 
         async function init() {
             try {
-                console.log('Loading Brahma model...');
+                log('Starting initialization...');
+                log('User Agent: ' + navigator.userAgent);
+                log('Platform: ' + navigator.platform);
+
+                // Check if ONNX Runtime Web loaded
+                if (typeof ort === 'undefined') {
+                    throw new Error('ONNX Runtime Web not loaded');
+                }
+                log('✅ ONNX Runtime Web loaded');
+
+                // Check WebGPU support
+                if ('gpu' in navigator) {
+                    log('✅ WebGPU supported');
+                } else {
+                    log('⚠️ WebGPU not supported, will use WebAssembly');
+                }
 
                 // Load tokenizer
                 await loadTokenizer();
 
-                // Load ONNX model
-                session = await ort.InferenceSession.create('brahma_model.onnx');
+                // Load ONNX model with detailed options
+                log('Loading ONNX model...');
 
-                console.log('✅ Brahma loaded!');
-                console.log('Input names:', session.inputNames);
-                console.log('Output names:', session.outputNames);
+                const sessionOptions = {
+                    executionProviders: ['webgl', 'wasm'],
+                    enableProfiling: false,
+                    enableCaching: true
+                };
+
+                // Try to create inference session
+                log('Creating inference session...');
+                session = await ort.InferenceSession.create(
+                    'brahma_model.onnx',
+                    sessionOptions
+                );
+
+                log('✅ Brahma model loaded!');
+                log('Input names: ' + session.inputNames);
+                log('Output names: ' + session.outputNames);
+                log('Output shape: ' + JSON.stringify(session.outputNames));
 
                 // Update UI
                 document.getElementById('status').className = 'status ready';
@@ -256,11 +327,27 @@
                 document.getElementById('query').disabled = false;
                 document.getElementById('askBtn').disabled = false;
 
+                // Show debug info
+                debugInfo.classList.add('show');
+
             } catch (e) {
                 console.error('Error loading model:', e);
+                log('❌ Error: ' + e.message);
+                log('Error stack: ' + (e.stack || 'no stack trace'));
+
                 document.getElementById('status').className = 'status error';
                 document.getElementById('status').innerHTML =
-                    '❌ Error: ' + e.message + '<br><small>Make sure brahma_model.onnx and brahma_model.onnx.data are in the same directory</small>';
+                    '❌ Error: ' + e.message +
+                    '<br><br><strong>Troubleshooting:</strong><br>' +
+                    '• Make sure all files are in the same directory<br>' +
+                    '• Check browser console (F12) for details<br>' +
+                    '• Files needed:<br>' +
+                    '&nbsp;&nbsp;- brahma_model.onnx (205 KB)<br>' +
+                    '&nbsp;&nbsp;- brahma_model.onnx.data (2.3 MB)<br>' +
+                    '&nbsp;&nbsp;- tokenizer_vocab.json (107 KB)<br><br>' +
+                    '<button onclick="debugInfo.classList.add(\'show\')">Show Debug Info</button>';
+
+                debugInfo.classList.add('show');
             }
         }
 
@@ -278,10 +365,11 @@
             try {
                 statusDiv.className = 'status loading';
                 statusDiv.textContent = 'Processing...';
+                log('Processing query: ' + query);
 
                 // Tokenize
                 const tokens = tokenizeQuery(query);
-                console.log('Tokens:', tokens.slice(0, 10));
+                log('Tokens (first 10): ' + tokens.slice(0, 10).join(', '));
 
                 // Create tensor
                 const input = new ort.Tensor('int64', new BigInt64Array(tokens), [1, 48]);
@@ -289,6 +377,7 @@
                 const startTime = performance.now();
 
                 // Run inference
+                log('Running inference...');
                 const outputs = await session.run({input_ids: input});
 
                 const endTime = performance.now();
@@ -318,8 +407,13 @@
                 statusDiv.className = 'status ready';
                 statusDiv.textContent = '✅ Complete!';
 
+                log('✅ Inference complete: ' + latency + 'ms');
+
             } catch (e) {
                 console.error('Error:', e);
+                log('❌ Inference error: ' + e.message);
+                log('Error stack: ' + (e.stack || 'no stack trace'));
+
                 statusDiv.className = 'status error';
                 statusDiv.textContent = '❌ Error: ' + e.message;
             }
