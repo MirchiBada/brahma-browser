@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ब्रह्म भगवान — Bhagavad Gita Wisdom (Browser)</title>
+    <title>ब्रह्म भगवान — Bhagavad Gita Pure Retrieval</title>
     <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.0/dist/ort.min.js"></script>
     <style>
         * {
@@ -14,35 +14,49 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
+            color: #e8e8e8;
         }
 
         .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 700px;
-            width: 100%;
-            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .om-symbol {
+            font-size: 64px;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            margin-bottom: 10px;
         }
 
         h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
+            color: #ffd700;
+            font-size: 36px;
+            margin-bottom: 5px;
         }
 
         .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
+            color: #a0a0a0;
             font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .philosophy {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-style: italic;
+            text-align: center;
         }
 
         .status {
@@ -51,64 +65,75 @@
             border-radius: 10px;
             margin-bottom: 20px;
             font-weight: bold;
-            white-space: pre-wrap;
-            font-family: monospace;
-            font-size: 12px;
         }
 
         .status.loading {
-            background: #fff3cd;
-            color: #856404;
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            color: #ffc107;
         }
 
         .status.ready {
-            background: #d4edda;
-            color: #155724;
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+            color: #4caf50;
         }
 
         .status.error {
-            background: #f8d7da;
-            color: #721c24;
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid rgba(244, 67, 54, 0.5);
+            color: #f44336;
         }
 
-        .status.info {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .input-group {
+        .search-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
             margin-bottom: 20px;
         }
 
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
         input[type="text"] {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
             border-radius: 10px;
             font-size: 16px;
-            transition: border-color 0.3s;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
         input[type="text"]:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        input[type="text"]::placeholder {
+            color: #888;
         }
 
         button {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #ffd700 0%, #ff9500 100%);
+            color: #1a1a2e;
             border: none;
             border-radius: 10px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         button:hover:not(:disabled) {
             transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
         }
 
         button:disabled {
@@ -116,309 +141,551 @@
             cursor: not-allowed;
         }
 
-        .result {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
+        .examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .example-btn {
+            padding: 8px 15px;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            color: #ffd700;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-btn:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        .results {
             display: none;
         }
 
-        .result.show {
+        .results.show {
             display: block;
         }
 
-        .result h3 {
-            color: #333;
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .result-header h2 {
+            color: #ffd700;
+            font-size: 20px;
+        }
+
+        .latency {
+            color: #4caf50;
+            font-size: 14px;
+        }
+
+        .verse-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffd700;
+            transition: transform 0.2s;
+        }
+
+        .verse-card:hover {
+            transform: translateX(5px);
+        }
+
+        .verse-ref {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 15px;
         }
 
-        .embedding-info {
-            font-family: monospace;
-            background: white;
-            padding: 15px;
-            border-radius: 5px;
-            font-size: 12px;
-            word-break: break-all;
+        .verse-number {
+            background: linear-gradient(135deg, #ffd700 0%, #ff9500 100%);
+            color: #1a1a2e;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
         }
 
-        .tech-info {
-            margin-top: 20px;
+        .similarity {
+            color: #4caf50;
+            font-size: 14px;
+        }
+
+        .chapter-name {
+            color: #a0a0a0;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        .sanskrit {
+            font-size: 18px;
+            line-height: 1.8;
+            color: #ffd700;
+            margin-bottom: 15px;
             padding: 15px;
-            background: #e7f3ff;
+            background: rgba(255, 215, 0, 0.05);
             border-radius: 10px;
+            font-family: 'Noto Sans Devanagari', 'Mangal', sans-serif;
+        }
+
+        .translation {
+            font-size: 15px;
+            line-height: 1.7;
+            color: #e0e0e0;
+        }
+
+        .translation-label {
+            color: #888;
             font-size: 12px;
-            color: #0066cc;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .om-symbol {
+        .stats {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .stats h3 {
+            color: #ffd700;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
             text-align: center;
-            font-size: 48px;
-            margin-bottom: 20px;
-            color: #667eea;
         }
 
-        .debug-info {
-            margin-top: 10px;
-            padding: 10px;
-            background: #f0f0f0;
-            border-radius: 5px;
-            font-size: 11px;
-            font-family: monospace;
-            display: none;
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffd700;
         }
 
-        .debug-info.show {
-            display: block;
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .footer p {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .footer .mantra {
+            color: #ffd700;
+            font-size: 16px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .input-group {
+                flex-direction: column;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .stat-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="om-symbol">॥ ॐ ॥</div>
-        <h1>ब्रह्म भगवान</h1>
-        <p class="subtitle">Bhagavad Gita Wisdom — Browser Version (ONNX Runtime Web)</p>
+        <div class="header">
+            <div class="om-symbol">॥ ॐ ॥</div>
+            <h1>ब्रह्म भगवान</h1>
+            <p class="subtitle">Pure Retrieval Paradigm — 701 Verses of Eternal Wisdom</p>
+        </div>
+
+        <div class="philosophy">
+            "I do not GENERATE answers. I POINT you to existing truth."<br>
+            — निष्काम कर्म योग (Desireless Action)
+        </div>
 
         <div id="status" class="status loading">
-            Loading Brahma model... (2.6 MB single-file)
+            Loading Brahma... (Model: 2.6 MB | Embeddings: 1.4 MB | Corpus: 32 MB)
         </div>
 
-        <div class="input-group">
-            <input
-                type="text"
-                id="query"
-                placeholder="Ask a question... (e.g., What is karma?)"
-                disabled
-            >
-        </div>
-
-        <button id="askBtn" onclick="askBrahma()" disabled>
-            Ask Brahma
-        </button>
-
-        <div id="result" class="result">
-            <h3>Embedding Result:</h3>
-            <div id="embedding" class="embedding-info"></div>
-            <div class="tech-info">
-                <strong>Model Info:</strong><br>
-                • Format: ONNX Single-File (2.6 MB, all weights embedded)<br>
-                • Runtime: ONNX Runtime Web<br>
-                • Acceleration: WebGPU / WebAssembly<br>
-                • Privacy: 100% local processing<br>
-                • Cost: $0/month (static hosting)
+        <div class="search-box">
+            <div class="input-group">
+                <input
+                    type="text"
+                    id="query"
+                    placeholder="Ask in English, Hindi, or Sanskrit..."
+                    disabled
+                >
+                <button id="askBtn" onclick="search()" disabled>
+                    Ask Brahma
+                </button>
+            </div>
+            <div class="examples">
+                <span style="color: #888; margin-right: 10px;">Try:</span>
+                <button class="example-btn" onclick="setQuery('What is karma?')">What is karma?</button>
+                <button class="example-btn" onclick="setQuery('कर्म क्या है?')">कर्म क्या है?</button>
+                <button class="example-btn" onclick="setQuery('How to find peace?')">How to find peace?</button>
+                <button class="example-btn" onclick="setQuery('What is the soul?')">What is the soul?</button>
+                <button class="example-btn" onclick="setQuery('योग का अर्थ')">योग का अर्थ</button>
             </div>
         </div>
 
-        <div id="debug" class="debug-info"></div>
+        <div id="results" class="results">
+            <div class="result-header">
+                <h2>Divine Wisdom Found</h2>
+                <span id="latency" class="latency"></span>
+            </div>
+            <div id="verses"></div>
+        </div>
+
+        <div class="stats">
+            <h3>System Statistics</h3>
+            <div class="stat-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-verses">0</div>
+                    <div class="stat-label">Verses Loaded</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-params">607K</div>
+                    <div class="stat-label">Parameters</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-dim">96</div>
+                    <div class="stat-label">Embedding Dim</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-jap">540</div>
+                    <div class="stat-label">जप Rounds</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Born at श्रीनाथजी मंदिर, नाथद्वारा | 30 December 2025</p>
+            <p>540 rounds of sacred जप | 100% Deterministic | 0% Hallucination</p>
+            <p class="mantra">ॐ तत् सत् | जय श्री कृष्ण</p>
+        </div>
     </div>
 
     <script>
-        let session;
-        let tokenizer;
-        let debugInfo = document.getElementById('debug');
+        // Global state
+        let session = null;
+        let tokenizer = null;
+        let verseEmbeddings = null;
+        let corpus = {};
+        let verseList = [];
 
-        function log(message) {
-            console.log(message);
-            debugInfo.textContent += message + '\n';
+        // Chapter names in Hindi
+        const chapterNames = {
+            1: "अर्जुन विषाद योग",
+            2: "सांख्य योग",
+            3: "कर्म योग",
+            4: "ज्ञान कर्म संन्यास योग",
+            5: "कर्म संन्यास योग",
+            6: "आत्म संयम योग",
+            7: "ज्ञान विज्ञान योग",
+            8: "अक्षर ब्रह्म योग",
+            9: "राज विद्या राज गुह्य योग",
+            10: "विभूति योग",
+            11: "विश्वरूप दर्शन योग",
+            12: "भक्ति योग",
+            13: "क्षेत्र क्षेत्रज्ञ विभाग योग",
+            14: "गुणत्रय विभाग योग",
+            15: "पुरुषोत्तम योग",
+            16: "दैवासुर सम्पद विभाग योग",
+            17: "श्रद्धात्रय विभाग योग",
+            18: "मोक्ष संन्यास योग"
+        };
+
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
         }
 
+        function setQuery(text) {
+            document.getElementById('query').value = text;
+        }
+
+        // Load tokenizer
         async function loadTokenizer() {
             try {
-                log('Fetching tokenizer_vocab.json...');
                 const response = await fetch('tokenizer_vocab.json');
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
                 const data = await response.json();
-
                 tokenizer = {
                     wordToId: data.word_to_id,
                     vocabSize: data.vocab_size
                 };
-
-                log('✅ Tokenizer loaded: ' + tokenizer.vocabSize + ' words');
+                console.log('Tokenizer loaded:', tokenizer.vocabSize, 'words');
                 return true;
             } catch (e) {
-                log('⚠️ Tokenizer load failed: ' + e.message);
-                log('Using fallback tokenizer');
-
-                tokenizer = {
-                    wordToId: null,
-                    vocabSize: 4000
-                };
-                return true;
+                console.error('Tokenizer error:', e);
+                return false;
             }
         }
 
+        // Load verse embeddings
+        async function loadVerseEmbeddings() {
+            try {
+                updateStatus('Loading verse embeddings...', 'loading');
+                const response = await fetch('verse_embeddings.json');
+                verseEmbeddings = await response.json();
+                console.log('Verse embeddings loaded:', verseEmbeddings.total_verses, 'verses');
+                return true;
+            } catch (e) {
+                console.error('Embeddings error:', e);
+                return false;
+            }
+        }
+
+        // Load corpus
+        async function loadCorpus() {
+            try {
+                updateStatus('Loading Bhagavad Gita corpus...', 'loading');
+                const chapters = [];
+
+                for (let i = 1; i <= 18; i++) {
+                    const response = await fetch(`corpus/gita/bhagavad_gita_chapter_${i}.json`);
+                    const data = await response.json();
+                    corpus[i] = data.BhagavadGitaChapter;
+
+                    // Build verse list with references
+                    for (const verse of data.BhagavadGitaChapter) {
+                        verseList.push({
+                            ref: `${verse.chapter}.${verse.verse}`,
+                            chapter: verse.chapter,
+                            verse: verse.verse,
+                            text: verse.text,
+                            translations: verse.translations || {}
+                        });
+                    }
+
+                    chapters.push(i);
+                }
+
+                console.log('Corpus loaded:', verseList.length, 'verses');
+                document.getElementById('stat-verses').textContent = verseList.length;
+                return true;
+            } catch (e) {
+                console.error('Corpus error:', e);
+                return false;
+            }
+        }
+
+        // Tokenize query
         function tokenizeQuery(text, maxLen = 48) {
             const tokens = [];
-
-            // Simple tokenization
-            const words = text.toLowerCase().split(/[\s,\.!?;:()]+/);
+            const words = text.toLowerCase()
+                .replace(/[।॥]/g, ' ')  // Sanskrit punctuation
+                .split(/[\s,\.!?;:()\[\]{}'"]+/)
+                .filter(w => w.length > 0);
 
             for (const word of words) {
-                let tokenId = 1; // <UNK> token
+                let tokenId = 1; // <UNK>
                 if (tokenizer.wordToId && word in tokenizer.wordToId) {
                     tokenId = tokenizer.wordToId[word];
-                } else {
-                    // Character-based fallback
-                    tokenId = word.charCodeAt(0) % tokenizer.vocabSize;
                 }
                 tokens.push(BigInt(tokenId));
             }
 
-            // Pad to maxLen
+            // Pad
             while (tokens.length < maxLen) {
-                tokens.push(BigInt(0)); // <PAD> token
+                tokens.push(BigInt(0));
             }
 
-            // Truncate if too long
             return tokens.slice(0, maxLen);
         }
 
-        async function init() {
-            try {
-                log('Starting initialization...');
-                log('User Agent: ' + navigator.userAgent);
-                log('Platform: ' + navigator.platform);
+        // Cosine similarity
+        function cosineSimilarity(a, b) {
+            let dotProduct = 0;
+            let normA = 0;
+            let normB = 0;
 
-                // Check if ONNX Runtime Web loaded
-                if (typeof ort === 'undefined') {
-                    throw new Error('ONNX Runtime Web not loaded');
-                }
-                log('✅ ONNX Runtime Web loaded');
-
-                // Check WebGPU support
-                if ('gpu' in navigator) {
-                    log('✅ WebGPU supported');
-                } else {
-                    log('⚠️ WebGPU not supported, will use WebAssembly');
-                }
-
-                // Load tokenizer
-                await loadTokenizer();
-
-                // Load ONNX model with detailed options
-                log('Loading ONNX model...');
-
-                const sessionOptions = {
-                    executionProviders: ['webgl', 'wasm'],
-                    enableProfiling: false,
-                    enableCaching: true
-                };
-
-                // Try to create inference session
-                log('Creating inference session...');
-                session = await ort.InferenceSession.create(
-                    'brahma_model.onnx',
-                    sessionOptions
-                );
-
-                log('✅ Brahma model loaded!');
-                log('Input names: ' + session.inputNames);
-                log('Output names: ' + session.outputNames);
-                log('Output shape: ' + JSON.stringify(session.outputNames));
-
-                // Update UI
-                document.getElementById('status').className = 'status ready';
-                document.getElementById('status').textContent = '✅ Brahma Ready! (ब्रह्म भगवान)';
-                document.getElementById('query').disabled = false;
-                document.getElementById('askBtn').disabled = false;
-
-                // Show debug info
-                debugInfo.classList.add('show');
-
-            } catch (e) {
-                console.error('Error loading model:', e);
-                log('❌ Error: ' + e.message);
-                log('Error stack: ' + (e.stack || 'no stack trace'));
-
-                document.getElementById('status').className = 'status error';
-                document.getElementById('status').innerHTML =
-                    '❌ Error: ' + e.message +
-                    '<br><br><strong>Troubleshooting:</strong><br>' +
-                    '• Make sure all files are in the same directory<br>' +
-                    '• Check browser console (F12) for details<br>' +
-                    '• Files needed:<br>' +
-                    '&nbsp;&nbsp;- brahma_model.onnx (2.6 MB single-file)<br>' +
-                    '&nbsp;&nbsp;- tokenizer_vocab.json (107 KB)<br><br>' +
-                    '<button onclick="debugInfo.classList.add(\'show\')">Show Debug Info</button>';
-
-                debugInfo.classList.add('show');
+            for (let i = 0; i < a.length; i++) {
+                dotProduct += a[i] * b[i];
+                normA += a[i] * a[i];
+                normB += b[i] * b[i];
             }
+
+            if (normA === 0 || normB === 0) return 0;
+            return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
         }
 
-        async function askBrahma() {
-            const query = document.getElementById('query').value;
-            const resultDiv = document.getElementById('result');
-            const embeddingDiv = document.getElementById('embedding');
-            const statusDiv = document.getElementById('status');
-
+        // Search function
+        async function search() {
+            const query = document.getElementById('query').value.trim();
             if (!query) {
                 alert('Please enter a question');
                 return;
             }
 
             try {
-                statusDiv.className = 'status loading';
-                statusDiv.textContent = 'Processing...';
-                log('Processing query: ' + query);
+                updateStatus('Searching...', 'loading');
+                const startTime = performance.now();
 
                 // Tokenize
                 const tokens = tokenizeQuery(query);
-                log('Tokens (first 10): ' + tokens.slice(0, 10).join(', '));
 
-                // Create tensor
+                // Create tensor and run inference
                 const input = new ort.Tensor('int64', new BigInt64Array(tokens), [1, 48]);
+                const outputs = await session.run({ input_ids: input });
+                const queryEmbedding = Array.from(outputs.embedding.data);
 
-                const startTime = performance.now();
+                // Calculate similarities with all verses
+                const similarities = [];
+                for (let i = 0; i < verseEmbeddings.total_verses; i++) {
+                    const verseEmb = verseEmbeddings.embeddings[i];
+                    const sim = cosineSimilarity(queryEmbedding, verseEmb);
+                    similarities.push({ index: i, similarity: sim });
+                }
 
-                // Run inference
-                log('Running inference...');
-                const outputs = await session.run({input_ids: input});
+                // Sort by similarity (descending)
+                similarities.sort((a, b) => b.similarity - a.similarity);
+
+                // Get top 5 results
+                const topK = 5;
+                const results = similarities.slice(0, topK);
 
                 const endTime = performance.now();
                 const latency = (endTime - startTime).toFixed(2);
 
-                // Get embedding
-                const embedding = outputs.embedding;
-                const data = Array.from(embedding.data);
-
-                // Calculate L2 norm
-                let sumSquares = 0;
-                for (let i = 0; i < data.length; i++) {
-                    sumSquares += data[i] * data[i];
-                }
-                const l2Norm = Math.sqrt(sumSquares).toFixed(4);
-
-                // Display result
-                embeddingDiv.innerHTML =
-                    '<strong>Query:</strong> ' + query + '<br><br>' +
-                    '<strong>Latency:</strong> ' + latency + 'ms<br><br>' +
-                    '<strong>Output Shape:</strong> [' + embedding.dims.join(', ') + ']<br><br>' +
-                    '<strong>L2 Norm:</strong> ' + l2Norm + '<br><br>' +
-                    '<strong>First 10 values:</strong><br>' +
-                    data.slice(0, 10).map(v => v.toFixed(4)).join(', ');
-
-                resultDiv.classList.add('show');
-                statusDiv.className = 'status ready';
-                statusDiv.textContent = '✅ Complete!';
-
-                log('✅ Inference complete: ' + latency + 'ms');
+                // Display results
+                displayResults(query, results, latency);
+                updateStatus('✅ Brahma Ready — Pure Retrieval Paradigm', 'ready');
 
             } catch (e) {
-                console.error('Error:', e);
-                log('❌ Inference error: ' + e.message);
-                log('Error stack: ' + (e.stack || 'no stack trace'));
-
-                statusDiv.className = 'status error';
-                statusDiv.textContent = '❌ Error: ' + e.message;
+                console.error('Search error:', e);
+                updateStatus('Error: ' + e.message, 'error');
             }
         }
 
-        // Initialize on load
+        // Display results
+        function displayResults(query, results, latency) {
+            const resultsDiv = document.getElementById('results');
+            const versesDiv = document.getElementById('verses');
+            const latencySpan = document.getElementById('latency');
+
+            latencySpan.textContent = `${latency}ms`;
+            versesDiv.innerHTML = '';
+
+            for (const result of results) {
+                const verse = verseList[result.index];
+                if (!verse) continue;
+
+                // Get best translation
+                let translation = '';
+                const translationKeys = ['swami tejomayananda', 'swami ramsukhdas', 'swami sivananda', 'shri purohit swami'];
+                for (const key of translationKeys) {
+                    if (verse.translations[key] && !verse.translations[key].includes('No such translation')) {
+                        translation = verse.translations[key];
+                        break;
+                    }
+                }
+
+                const card = document.createElement('div');
+                card.className = 'verse-card';
+                card.innerHTML = `
+                    <div class="verse-ref">
+                        <span class="verse-number">अध्याय ${verse.chapter}, श्लोक ${verse.verse}</span>
+                        <span class="similarity">${(result.similarity * 100).toFixed(1)}% match</span>
+                    </div>
+                    <div class="chapter-name">${chapterNames[verse.chapter] || ''}</div>
+                    <div class="sanskrit">${verse.text.replace(/\n/g, '<br>')}</div>
+                    ${translation ? `
+                        <div class="translation-label">Translation</div>
+                        <div class="translation">${translation}</div>
+                    ` : ''}
+                `;
+                versesDiv.appendChild(card);
+            }
+
+            resultsDiv.classList.add('show');
+        }
+
+        // Initialize
+        async function init() {
+            try {
+                updateStatus('Loading Brahma model...', 'loading');
+
+                // Check ONNX Runtime
+                if (typeof ort === 'undefined') {
+                    throw new Error('ONNX Runtime Web not loaded');
+                }
+
+                // Load all components in parallel where possible
+                const [tokenizerOk] = await Promise.all([
+                    loadTokenizer()
+                ]);
+
+                // Load model
+                updateStatus('Loading neural network...', 'loading');
+                session = await ort.InferenceSession.create('brahma_model.onnx', {
+                    executionProviders: ['webgl', 'wasm']
+                });
+
+                // Load embeddings
+                const embeddingsOk = await loadVerseEmbeddings();
+                if (!embeddingsOk) {
+                    throw new Error('Failed to load verse embeddings');
+                }
+
+                // Load corpus
+                const corpusOk = await loadCorpus();
+                if (!corpusOk) {
+                    throw new Error('Failed to load corpus');
+                }
+
+                // Enable UI
+                document.getElementById('query').disabled = false;
+                document.getElementById('askBtn').disabled = false;
+
+                // Allow Enter key to search
+                document.getElementById('query').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') search();
+                });
+
+                updateStatus('✅ Brahma Ready — Pure Retrieval Paradigm (701 verses loaded)', 'ready');
+
+            } catch (e) {
+                console.error('Init error:', e);
+                updateStatus('❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        // Start
         window.addEventListener('load', init);
     </script>
 </body>
